@@ -1,0 +1,42 @@
+version: '3.5'
+
+services:
+    php:
+        image: messenger_php:dev
+        build:
+            context: .
+            dockerfile: ./infrastructure/php/Dockerfile
+            target: dev
+        environment:
+            - APP_ENV=dev
+            - APP_SECRET=scotland-likes-unicorns
+        depends_on:
+            - rabbitmq
+        volumes:
+            - ./:/srv/app:cached
+            # to allow composer to function inside the container
+            - ~/.ssh:/root/.ssh:ro
+            - ~/.ssh:/var/www/.ssh:ro
+            - ~/.composer/auth.json:/root/.composer/auth.json:ro
+            - ~/.composer/auth.json:/var/www/.composer/auth.json:ro
+            - ~/.composer/cache:/var/www/.composer/:cached
+    rabbitmq:
+        image: rabbitmq:3-management
+        hostname: rabbitmq
+        environment:
+            RABBITMQ_DEFAULT_USER: rabbitmq
+            RABBITMQ_DEFAULT_PASS: rabbitmq
+            RABBITMQ_DEFAULT_VHOST: /
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+    nginx:
+        networks:
+            default:
+            127.0.0.1.xip.io:
+                aliases:
+                    - demo.127.0.0.1.xip.io
+
+networks:
+    default:
+    127.0.0.1.xip.io:
